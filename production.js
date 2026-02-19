@@ -603,7 +603,7 @@ app.post("/api/check-session", async (req, res) => {
   }
 });
 
-app.get((req,res)=>{
+app.get('/',(req,res)=>{
   res.send(`server is running on ${PORT} `)
 })
 
