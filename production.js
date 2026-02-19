@@ -9,6 +9,7 @@ const path = require("path");
 const os = require("os");
 const fs =require("fs")
 
+
 puppeteer.use(StealthPlugin());
 
 const app = express();
@@ -28,7 +29,7 @@ connectDB();
 // ============== In‑memory active browser sessions ==============
 let activeBrowserSessions = {};
 
-const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_"));
+
 
 // Utility: wait
 function wait(ms) {
@@ -391,6 +392,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
     }
 
     // const chromeProfilePath = getChromeProfile();
+    const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_"));
 
     browser = await puppeteer.launch({
        headless: "new", 
@@ -532,6 +534,14 @@ app.post("/api/phonepe-automate", async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
     if (page) await page.screenshot({ path: `error_${Date.now()}.png` });
+  }
+  finally {
+    try {
+      if (page) await page.close();
+      if (browser) await browser.close();
+    } catch (err) {
+      console.error("❌ Failed to close browser:", err.message);
+    }
   }
 });
 
