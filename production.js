@@ -358,7 +358,17 @@ async function pollForOTPAndSubmit(phoneNumber, page, browser) {
   });
 }
 
-// ============== API Endpoints ==============
+
+app.post("/api/demo", async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone) {
+    return res.status(400).json({ status: "false", message: "Phone number required" });
+  }
+
+  return res.json({ status: "true", phoneNumber: phone });
+});
+
 
 // Start login or restore session
 app.post("/api/phonepe-automate", async (req, res) => {
