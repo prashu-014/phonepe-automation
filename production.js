@@ -388,7 +388,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
     const chromeProfilePath = getChromeProfile();
 
     browser = await puppeteer.launch({
-      headless: false,
+       headless: "new", 
       defaultViewport: null,
       args: [
         "--no-sandbox",
