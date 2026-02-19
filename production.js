@@ -5,6 +5,9 @@ const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const connectDB = require("./config/dbConnection");
 const OTP = require("./model/OTP");
 const Session = require("./model/Session");
+const path = require("path");
+const os = require("os");
+const fs =require("fs")
 
 puppeteer.use(StealthPlugin());
 
@@ -25,16 +28,18 @@ connectDB();
 // ============== In‑memory active browser sessions ==============
 let activeBrowserSessions = {};
 
+const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_"));
+
 // Utility: wait
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Get Chrome profile path
-function getChromeProfile() {
-  const username = process.env.USERNAME || "prash";
-  return `C:/Users/${username}/AppData/Local/Google/Chrome/User Data`;
-}
+// function getChromeProfile() {
+//   const username = process.env.USERNAME || "prash";
+//   return `C:/Users/${username}/AppData/Local/Google/Chrome/User Data`;
+// }
 
 // ============== Active session management ==============
 async function storeActiveBrowserSession(phoneNumber, browser, page) {
@@ -385,7 +390,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
         .json({ success: false, error: "Phone number is required" });
     }
 
-    const chromeProfilePath = getChromeProfile();
+    // const chromeProfilePath = getChromeProfile();
 
     browser = await puppeteer.launch({
        headless: "new", 
@@ -393,7 +398,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        `--user-data-dir=${chromeProfilePath}`,
+        `--user-data-dir=${tmpProfile}`,
         "--profile-directory=Default",
         "--start-maximized",
         "--disable-dev-shm-usage",
