@@ -411,7 +411,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
     const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_"));
 
     browser = await puppeteer.launch({
-      headless: false,
+      headless: "new",
       defaultViewport: null,
       args: [
         "--no-sandbox",
