@@ -7,13 +7,13 @@ const OTP = require("./model/OTP");
 const Session = require("./model/Session");
 const path = require("path");
 const os = require("os");
-const fs =require("fs")
-
+const fs = require("fs");
+const { HttpsProxyAgent } = require("https-proxy-agent");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
 puppeteer.use(StealthPlugin());
 
 const app = express();
-
 
 app.use(express.json());
 
@@ -22,9 +22,27 @@ app.use(cors());
 
 const PORT = process.env.PORT || 8080;
 
-
 // Connect to MongoDB
 connectDB();
+
+const proxyAgent = new HttpsProxyAgent(
+  "http://xdlvzovv:6fy9rfiu590s@23.95.150.145:6114",
+);
+
+const apiProxyMiddleware = createProxyMiddleware({
+  target: "https://business.phonepe.com/", // real target website
+  changeOrigin: true,
+  agent: proxyAgent,
+  onProxyReq: (proxyReq, req, res) => {
+    console.log("🔄 Proxying request via authenticated proxy");
+  },
+  onError: (err, req, res) => {
+    console.error("❌ Proxy error:", err);
+    res.status(500).json({ error: "Proxy failed" });
+  },
+});
+
+// app.use('/proxy', apiProxyMiddleware);
 
 // ============== In‑memory active browser sessions ==============
 let activeBrowserSessions = {};
@@ -224,7 +242,6 @@ async function restoreBrowserState(page, phoneNumber) {
     });
     await wait(3000);
 
-
     await page.evaluate((storageData) => {
       localStorage.clear();
       sessionStorage.clear();
@@ -285,7 +302,6 @@ async function pollForOTPAndSubmit(phoneNumber, page, browser) {
 
           // Type the OTP character by character with realistic delay
           await page.type("#mobile_otp", otpDoc.otp, { delay: 1000 });
-
 
           // Mark OTP as used in DB
           await OTP.updateOne(
@@ -364,17 +380,17 @@ async function pollForOTPAndSubmit(phoneNumber, page, browser) {
   });
 }
 
-
 app.post("/api/demo", async (req, res) => {
   const { phone } = req.body;
 
   if (!phone) {
-    return res.status(400).json({ status: "false", message: "Phone number required" });
+    return res
+      .status(400)
+      .json({ status: "false", message: "Phone number required" });
   }
 
   return res.json({ status: "true", phoneNumber: phone });
 });
-
 
 // Start login or restore session
 app.post("/api/phonepe-automate", async (req, res) => {
@@ -395,7 +411,7 @@ app.post("/api/phonepe-automate", async (req, res) => {
     const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), "puppeteer_"));
 
     browser = await puppeteer.launch({
-       headless: "new", 
+      headless: false,
       defaultViewport: null,
       args: [
         "--no-sandbox",
@@ -511,12 +527,15 @@ app.post("/api/phonepe-automate", async (req, res) => {
       console.log("OTP drawer not open or timeout");
     }
 
-    await page.waitForSelector("#mobile_otp", { timeout: 100000 });
-    console.log("✅ OTP input field show");
+    try {
+      await page.waitForSelector("#mobile_otp", { timeout: 100000 });
+      console.log("✅ OTP input field show");
+    } catch {
+      console.log("moblie OTP not found ");
+    }
 
     // Store active session and start polling
     await storeActiveBrowserSession(phoneNumber, browser, page);
-
 
     console.log("OTP sent. Polling MongoDB for OTP...");
 
@@ -534,13 +553,25 @@ app.post("/api/phonepe-automate", async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
     if (page) await page.screenshot({ path: `error_${Date.now()}.png` });
-  }
-  finally {
+  } finally {
     try {
-      if (page) await page.close();
-      if (browser) await browser.close();
+      if (page && !page.isClosed()) {
+        await page.close({ runBeforeUnload: true });
+      }
+
+      if (browser && browser.isConnected()) {
+        await browser.close();
+      }
+
+      console.log("✅ Browser closed safely");
     } catch (err) {
-      console.error("❌ Failed to close browser:", err.message);
+      console.error("❌ Close error:", err.message);
+
+      // Force kill if needed
+      if (browser?.process()) {
+        browser.process().kill("SIGKILL");
+        console.log("🔥 Browser force killed");
+      }
     }
   }
 });
@@ -628,9 +659,9 @@ app.post("/api/check-session", async (req, res) => {
   }
 });
 
-app.get('/',(req,res)=>{
-  res.send(`server is running on ${PORT} `)
-})
+app.get("/", (req, res) => {
+  res.send(`server is running on ${PORT} `);
+});
 
 // Start server
 app.listen(PORT, () => {
