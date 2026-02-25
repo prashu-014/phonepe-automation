@@ -1,0 +1,31 @@
+{
+  "name": "positivepay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node production.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "fingerprint-generator": "^2.1.80",
+    "fingerprint-injector": "^2.1.80",
+    "http-proxy-middleware": "^3.0.5",
+    "https-proxy-agent": "^7.0.6",
+    "mongodb": "^7.1.0",
+    "mongoose": "^8.3.4",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.37.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "user-agents": "^1.1.669"
+  }
+}
