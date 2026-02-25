@@ -674,32 +674,32 @@ app.post("/api/submit-otp", async (req, res) => {
 });
 
 // OTP status check
-app.post("/api/otp-status", async (req, res) => {
-  try {
-    const { phoneNumber } = req.body;
-    if (!phoneNumber) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Phone number required" });
-    }
+// app.post("/api/otp-status", async (req, res) => {
+//   try {
+//     const { phoneNumber } = req.body;
+//     if (!phoneNumber) {
+//       return res
+//         .status(400)
+//         .json({ success: false, error: "Phone number required" });
+//     }
 
-    const page = getActiveBrowserPage(phoneNumber);
-    if (!page) {
-      return res.json({ success: true, hasActiveSession: false });
-    }
+//     const page = getActiveBrowserPage(phoneNumber);
+//     if (!page) {
+//       return res.json({ success: true, hasActiveSession: false });
+//     }
 
-    const currentUrl = await page.url();
-    const otpFieldExists = !!(await page.$("#mobile_otp").catch(() => null));
-    res.json({
-      success: true,
-      hasActiveSession: true,
-      isOnOtpScreen: currentUrl.includes("/login") && otpFieldExists,
-      currentUrl,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+//     const currentUrl = await page.url();
+//     const otpFieldExists = !!(await page.$("#mobile_otp").catch(() => null));
+//     res.json({
+//       success: true,
+//       hasActiveSession: true,
+//       isOnOtpScreen: currentUrl.includes("/login") && otpFieldExists,
+//       currentUrl,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 // Check session status from MongoDB
 app.post("/api/check-session", async (req, res) => {
